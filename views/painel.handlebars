@@ -1,0 +1,240 @@
+<div class="page-head">
+    <span class="eyebrow">Gerência</span>
+    <h2>Painel de Controle</h2>
+    <p>Acompanhe a saúde financeira e o giro de estoque da sua loja em tempo real.</p>
+</div>
+
+{{#if erro}}
+    <div class="alerta erro">{{erro}}</div>
+{{/if}}
+
+<!-- CARDS INTELIGENTES (KPIs) -->
+<div class="kpi-grid">
+
+    <a href="/fluxo-caixa" class="kpi-card" style="--accent: var(--brand); --accent-tint: var(--brand-tint);">
+        <div class="kpi-top">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 5v7h7"/><path d="M12 8v4l3 2"/></svg>
+            </div>
+            <span class="kpi-badge">Hoje</span>
+        </div>
+        <div>
+            <span class="kpi-label">Vendas de Hoje</span>
+            <div class="kpi-value">R$ {{faturamentoHoje}}</div>
+        </div>
+        <span class="kpi-foot">
+            Ver fluxo completo
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+    </a>
+
+    <a href="/clientes" class="kpi-card" style="--accent: var(--rust); --accent-tint: var(--rust-tint);">
+        <div class="kpi-top">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5.5c0-1.9-2.2-3-5-3s-5 1.4-5 3.2c0 4.2 10 2 10 6.3 0 1.8-2.2 3-5 3s-5-1.1-5-3"/></svg>
+            </div>
+        </div>
+        <div>
+            <span class="kpi-label">A Receber (Fiado)</span>
+            <div class="kpi-value is-accent">R$ {{totalFiadoPendente}}</div>
+        </div>
+        <span class="kpi-foot">
+            Gerenciar cobranças
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+    </a>
+
+    <a href="/estoque?filtro=baixo" class="kpi-card" style="--accent: var(--amber); --accent-tint: var(--amber-tint);">
+        <div class="kpi-top">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5"/></svg>
+            </div>
+            {{#if produtosEsgotando}}<span class="kpi-badge is-alert">Atenção</span>{{/if}}
+        </div>
+        <div>
+            <span class="kpi-label">Alertas de Estoque</span>
+            <div class="kpi-value">{{produtosEsgotando}} peças</div>
+        </div>
+        <span class="kpi-foot">
+            Reposição necessária
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+    </a>
+
+    <a href="/frente-caixa" class="kpi-card kpi-cta">
+        <div class="kpi-top">
+            <div class="kpi-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 4h2l1.2 11.4A2 2 0 0 0 8.2 17H18a2 2 0 0 0 2-1.6L21.5 8H6"/><circle cx="9" cy="20.5" r="1.3"/><circle cx="17.5" cy="20.5" r="1.3"/></svg>
+            </div>
+        </div>
+        <div>
+            <span class="kpi-label">Ação Rápida</span>
+            <div class="kpi-value">Frente de Caixa</div>
+        </div>
+        <span class="kpi-foot">
+            Abrir PDV
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+    </a>
+</div>
+
+<!-- ÁREA DE GRÁFICOS E RANKING -->
+<div class="painel-grid">
+
+    <div class="section-box">
+        <div class="chart-head">
+            <div>
+                <span class="eyebrow">Desempenho</span>
+                <h3>Faturamento Bruto</h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div class="chart-total">
+                    <span class="kpi-label">Total no período</span>
+                    <strong id="totalPeriodo">R$ 0,00</strong>
+                </div>
+                <select id="filtroTempo" class="select-periodo">
+                    <option value="semana">Últimos 7 dias</option>
+                    <option value="mes">Este mês</option>
+                    <option value="trimestre">Este trimestre</option>
+                    <option value="ano">Este ano</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap">
+            <canvas id="graficoVendas"></canvas>
+            <div id="graficoVazio" class="chart-empty" style="display: none;">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+                Sem vendas registradas nesse período.
+            </div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <span class="eyebrow">Tendências</span>
+        <h3 style="margin-bottom: 4px;">Peças Mais Vendidas</h3>
+
+        <ul class="ranking-list">
+            {{#each topProdutos}}
+            <li class="ranking-item">
+                <span class="rank-pos{{#if (eq @index 0)}} ouro{{/if}}{{#if (eq @index 1)}} prata{{/if}}{{#if (eq @index 2)}} bronze{{/if}}">{{addOne @index}}</span>
+                <div class="ranking-info">
+                    <strong>{{this.descricao}}</strong>
+                    <span>Tam: {{this.tamanho}} &middot; Cód: {{this.codigo}}</span>
+                </div>
+                <span class="ranking-qtd">{{this.quantidade_vendida}}</span>
+            </li>
+            {{else}}
+            <li class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg>
+                Nenhuma venda registrada ainda.
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function () {
+        const ctx = document.getElementById('graficoVendas').getContext('2d');
+        const elVazio = document.getElementById('graficoVazio');
+        const elTotal = document.getElementById('totalPeriodo');
+        const selectPeriodo = document.getElementById('filtroTempo');
+        let grafico = null;
+
+        function corTema(variavel) {
+            return getComputedStyle(document.documentElement).getPropertyValue(variavel).trim();
+        }
+
+        function formatarMoeda(valor) {
+            return 'R$ ' + (valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function corComOpacidade(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        async function carregarGrafico(periodo) {
+            try {
+                const resposta = await fetch(`/api/grafico-vendas?periodo=${periodo}`);
+                const dados = await resposta.json();
+
+                const totalPeriodo = (dados.valores || []).reduce((soma, v) => soma + v, 0);
+                elTotal.textContent = formatarMoeda(totalPeriodo);
+                elVazio.style.display = totalPeriodo > 0 ? 'none' : 'flex';
+
+                const brand = corTema('--brand') || '#24402F';
+                const ink = corTema('--ink-soft') || '#6B6659';
+                const grid = corTema('--border') || '#E3DCC8';
+
+                if (grafico) grafico.destroy();
+
+                grafico = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: dados.labels,
+                        datasets: [{
+                            label: 'Faturamento (R$)',
+                            data: dados.valores,
+                            backgroundColor: corComOpacidade(brand, 0.75),
+                            hoverBackgroundColor: brand,
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            maxBarThickness: 46
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 550, easing: 'easeOutQuart' },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: ink, font: { family: "'Inter', sans-serif", size: 11.5 } }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: grid },
+                                ticks: {
+                                    color: ink,
+                                    font: { family: "'Inter', sans-serif", size: 11.5 },
+                                    callback: (valor) => 'R$ ' + valor.toLocaleString('pt-BR')
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: corTema('--surface') || '#fff',
+                                titleColor: corTema('--ink') || '#201E1A',
+                                bodyColor: corTema('--ink') || '#201E1A',
+                                borderColor: grid,
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    label: (contexto) => formatarMoeda(contexto.parsed.y)
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (erro) {
+                console.error('Erro ao carregar gráfico do painel:', erro);
+                elVazio.style.display = 'flex';
+            }
+        }
+
+        selectPeriodo.addEventListener('change', () => carregarGrafico(selectPeriodo.value));
+
+        // Redesenha com as cores certas ao trocar de tema (claro/escuro)
+        document.getElementById('btn-tema-claro')?.addEventListener('click', () => setTimeout(() => carregarGrafico(selectPeriodo.value), 50));
+        document.getElementById('btn-tema-escuro')?.addEventListener('click', () => setTimeout(() => carregarGrafico(selectPeriodo.value), 50));
+
+        carregarGrafico(selectPeriodo.value);
+    })();
+</script>

@@ -1,0 +1,31 @@
+<div class="page-head">
+    <span class="eyebrow">Equipe</span>
+    <h2>Editar Vendedor</h2>
+    <p>Atualize o cargo ou redefina a senha do usuário <strong>{{usuario.codigo_login}}</strong>.</p>
+</div>
+
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<form action="/vendedores/editar/{{usuario.codigo_login}}" method="POST" class="form-cadastro card-form">
+    <div class="form-group">
+        <label>Código de login</label>
+        <p class="codigo-auto">{{usuario.codigo_login}} <em>(não pode ser alterado)</em></p>
+    </div>
+    <div class="form-group">
+        <label for="senha">Nova senha</label>
+        <input type="password" id="senha" name="senha" placeholder="Deixe em branco para manter a senha atual">
+    </div>
+    <div class="form-group">
+        <label for="cargo">Cargo</label>
+        <select id="cargo" name="cargo" required>
+            <option value="Vendedor" {{#if (eq usuario.cargo 'Vendedor')}}selected{{/if}}>Vendedor</option>
+            <option value="Gerente" {{#if (eq usuario.cargo 'Gerente')}}selected{{/if}}>Gerente</option>
+        </select>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <a href="/vendedores" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>

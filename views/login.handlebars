@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar · Ateliê</title>
+    <script>
+        (function () {
+            var salvo = localStorage.getItem('ateliê-tema');
+            var tema = salvo || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', tema);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="login-screen">
+        <div class="login-side">
+            <span class="brand-mark">JOIA RARA</span>
+            <span class="brand-tagline">Sistema de Gestão da Loja</span>
+            <p class="login-quote">
+                "Cada peça tem um código, cada venda uma história. O controle da loja começa aqui."
+                <span>Frente de caixa · Estoque · Fluxo de caixa</span>
+            </p>
+        </div>
+
+        <div class="login-panel">
+            <div class="theme-toggle" role="group" aria-label="Alternar tema">
+                <button type="button" id="btn-tema-claro" aria-label="Tema claro" title="Tema claro">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></svg>
+                </button>
+                <button type="button" id="btn-tema-escuro" aria-label="Tema escuro" title="Tema escuro">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+                </button>
+            </div>
+
+            <form action="/" method="POST" class="login-form">
+                <h2>Entrar</h2>
+                <p>Acesse com seu código de login e senha.</p>
+
+                {{#if erro}}
+                    <p class="alert alert-erro">{{erro}}</p>
+                {{/if}}
+
+                <div class="form-group">
+                    <label for="usuario">Usuário</label>
+                    <input type="text" id="usuario" name="usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var raiz = document.documentElement;
+            var btnClaro = document.getElementById('btn-tema-claro');
+            var btnEscuro = document.getElementById('btn-tema-escuro');
+
+            function marcarBotaoAtivo() {
+                var atual = raiz.getAttribute('data-theme');
+                btnClaro.classList.toggle('is-active', atual === 'light');
+                btnEscuro.classList.toggle('is-active', atual === 'dark');
+            }
+
+            function definirTema(tema) {
+                raiz.setAttribute('data-theme', tema);
+                localStorage.setItem('ateliê-tema', tema);
+                marcarBotaoAtivo();
+            }
+
+            btnClaro.addEventListener('click', function () { definirTema('light'); });
+            btnEscuro.addEventListener('click', function () { definirTema('dark'); });
+            marcarBotaoAtivo();
+        })();
+    </script>
+</body>
+</html>

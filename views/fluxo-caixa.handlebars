@@ -1,0 +1,424 @@
+<div class="page-head">
+    <span class="eyebrow">Gerência</span>
+    <h2>Fluxo de Caixa e DRE</h2>
+    <p>Controle financeiro total: vendas, custos, despesas e lucro real (baseado no dinheiro em caixa).</p>
+</div>
+
+{{#if sucesso}}
+    <div class="alerta sucesso">{{sucesso}}</div>
+{{/if}}
+{{#if erro}}
+    <div class="alerta erro">{{erro}}</div>
+{{/if}}
+
+<!-- BARRA PRINCIPAL DE FILTRO POR PERÍODO -->
+<div class="section-box filtro-box" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+    <div style="flex: 1; min-width: 250px;">
+        <h3 style="margin: 0;">Período de Análise</h3>
+        <p style="margin: 3px 0 0 0; font-size: 13px;">Selecione como deseja visualizar os dados financeiros da loja.</p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <select id="selectPeriodo" class="select-periodo" onchange="mudarFiltro()" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-strong);">
+                <option value="total">Total (Geral)</option>
+                <option value="ano">Por Ano</option>
+                <option value="trimestre">Por Trimestre</option>
+                <option value="mes">Por Mês</option>
+            </select>
+        </div>
+
+        <div id="controles-navegacao" style="display: flex; gap: 10px; align-items: center;">
+            <select id="selectMes" class="select-periodo" onchange="mudarFiltro()" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-strong);">
+                <option value="0">Janeiro</option>
+                <option value="1">Fevereiro</option>
+                <option value="2">Março</option>
+                <option value="3">Abril</option>
+                <option value="4">Maio</option>
+                <option value="5">Junho</option>
+                <option value="6">Julho</option>
+                <option value="7">Agosto</option>
+                <option value="8">Setembro</option>
+                <option value="9">Outubro</option>
+                <option value="10">Novembro</option>
+                <option value="11">Dezembro</option>
+            </select>
+
+            <input type="number" id="inputAno" value="{{anoSelecionado}}" onchange="mudarFiltro()" style="width: 80px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-strong);">
+            
+            <div style="display: flex; gap: 5px;">
+                <button onclick="navegarPeriodo(-1)" class="btn btn-secondary btn-sm" title="Período Anterior">&lt;</button>
+                <button onclick="navegarPeriodo(1)" class="btn btn-secondary btn-sm" title="Próximo Período">&gt;</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 1. CARDS DE RESUMO FINANCEIRO (ATUALIZADO) -->
+<div class="cards-financeiros" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    
+    <div class="fin-card" style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light);">
+        <span class="eyebrow" style="color: var(--ink-soft); font-size: 0.85em; text-transform: uppercase;">Receita Total (Bruta)</span>
+        <p style="font-size: 1.5em; font-weight: 700; margin: 5px 0 0 0;">{{formatMoney totalReceitas}}</p>
+    </div>
+
+    <div class="fin-card" style="background: var(--surface); padding: 20px; border-radius: 8px; border-left: 4px solid var(--rust); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span class="eyebrow" style="color: var(--ink-soft); font-size: 0.85em; text-transform: uppercase;">Vendas Fiado (A Receber)</span>
+        <p style="font-size: 1.5em; font-weight: 700; margin: 5px 0 0 0; color: var(--rust);">{{formatMoney totalFiado}}</p>
+    </div>
+
+    <div class="fin-card" style="background: var(--surface); padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span class="eyebrow" style="color: var(--ink-soft); font-size: 0.85em; text-transform: uppercase;">Recebido em Caixa</span>
+        <p style="font-size: 1.5em; font-weight: 700; margin: 5px 0 0 0; color: #10b981;">{{formatMoney totalRecebidoCaixa}}</p>
+    </div>
+
+    <div class="fin-card despesa" style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light);">
+        <span class="eyebrow" style="color: var(--ink-soft); font-size: 0.85em; text-transform: uppercase;">Saídas (CMV + Despesas)</span>
+        <p style="font-size: 1.5em; font-weight: 700; margin: 5px 0 0 0; color: #ef4444;">- {{formatMoney totalSaidas}}</p>
+    </div>
+
+    <div class="fin-card lucro" style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light); background-color: #f0fdf4;">
+        <span class="eyebrow" style="color: #166534; font-size: 0.85em; text-transform: uppercase;">Lucro Líquido Real</span>
+        <p style="font-size: 1.6em; font-weight: 800; margin: 5px 0 0 0; color: #15803d;">{{formatMoney lucroLiquidoReal}}</p>
+    </div>
+</div>
+
+<!-- O RESTANTE DO CÓDIGO (Gráfico, Calculadora, Tabelas) PERMANECE IGUAL -->
+<!-- 2. GRÁFICO FINANCEIRO -->
+<div class="section-box">
+    <h3 style="margin-top: 0;">Análise de Saúde Financeira</h3>
+    <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="graficoFluxoCaixa"></canvas>
+    </div>
+</div>
+
+<!-- 3. CALCULADORA DE CUSTO REAL (VIAGEM / IMPORTAÇÃO) -->
+<div class="section-box azul">
+    <h3 style="margin-top: 0;">Calculadora de Custos (Viagem / Importação)</h3>
+    <p style="font-size: 14px; margin-bottom: 20px;">Cada valor preenchido abaixo será salvo como uma despesa individual no seu fluxo de caixa.</p>
+
+    <form id="formRateioMercadoria">
+        <div class="calc-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Identificação do lote (ex: Viagem Brás SP)</label>
+                <input type="text" id="nomeLote" placeholder="De onde veio essa mercadoria?" required>
+            </div>
+
+            <div class="form-group">
+                <label>Valor das roupas (R$)</label>
+                <input type="number" id="calcMercadoria" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label>Passagem / combustível (R$)</label>
+                <input type="number" id="calcViagem" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label>Hotel / hospedagem (R$)</label>
+                <input type="number" id="calcHotel" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label>Alimentação (R$)</label>
+                <input type="number" id="calcAlimentacao" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label>Frete / transportadora (R$)</label>
+                <input type="number" id="calcFrete" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label>Impostos (R$)</label>
+                <input type="number" id="calcImposto" class="calc-input" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+                <label style="color: var(--rust);">Total de peças compradas</label>
+                <input type="number" id="calcQtdPecas" class="calc-input" min="1" placeholder="1" style="border-color: var(--rust);">
+            </div>
+        </div>
+
+        <div class="calc-resultado">
+            <div>
+                <small>Custo total da operação</small>
+                <h3 id="resultadoTotal" class="valor-total">R$ 0,00</h3>
+            </div>
+            <div>
+                <small>Custo médio por peça (use no estoque)</small>
+                <h3 id="resultadoUnidade" class="valor-unidade">R$ 0,00</h3>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <button type="submit" class="btn btn-primary btn-block">Registrar Gastos Separados</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 4. LANÇAMENTO DE DESPESA SIMPLES -->
+<div class="section-box">
+    <h3 style="margin-top: 0; color: var(--rust);">Registrar Saída Operacional Avulsa</h3>
+    <form action="/fluxo-caixa/despesa" method="POST" class="form-despesa">
+        <div class="form-group">
+            <label>Descrição detalhada</label>
+            <input type="text" name="descricao" required placeholder="Ex: Conta de luz, lanche da equipe...">
+        </div>
+        <div class="form-group">
+            <label>Categoria</label>
+            <select name="categoria" required>
+                <option value="">Selecione...</option>
+                <option value="Aluguel">Aluguel / Energia / Internet</option>
+                <option value="Salário">Salário / Comissão</option>
+                <option value="Alimentação">Almoço / Lanche</option>
+                <option value="Material">Material de Escritório/Limpeza</option>
+                <option value="Outros">Outros Gastos Operacionais</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Valor pago (R$)</label>
+            <input type="number" name="valor" min="0.01" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group" style="flex: 0.5; min-width: 140px;">
+            <button type="submit" class="btn btn-primary" style="height: 42px; width: 100%;">Registrar Despesa</button>
+        </div>
+    </form>
+</div>
+
+<!-- 5. TABELAS DE HISTÓRICO -->
+<div class="tabelas-historico">
+    <div class="section-box" style="flex: 2;">
+        <h3>Detalhamento de Vendas e Lucro</h3>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Produto</th>
+                        <th>Pagamento</th>
+                        <th>Custo (R$)</th>
+                        <th>Vendido (R$)</th>
+                        <th>Lucro Bruto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each vendas}}
+                    <tr>
+                        <td>{{formatDateTime data_venda}}</td>
+                        <td>{{codigo_produto}} - {{produto.descricao}}</td>
+                        <td>{{meio_pagamento}}</td>
+                        <td style="color: var(--amber);">{{formatMoney custo_produto}}</td>
+                        <td style="font-weight: 600;">{{formatMoney valor_pago}}</td>
+                        <td style="font-weight: 600; color: var(--sage);">{{formatMoney lucro_bruto}}</td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="6" style="text-align: center;">Nenhuma venda registrada neste período.</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-box" style="flex: 1;">
+        <h3>Histórico de Saídas</h3>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                        <th style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each despesas}}
+                    <tr>
+                        <td style="font-size: 12px;">{{formatDateTime data_despesa}}</td>
+                        <td>
+                            <strong>{{categoria}}</strong><br>
+                            <span style="font-size: 12px; color: var(--ink-soft);">{{descricao}}</span>
+                        </td>
+                        <td style="color: var(--rust); font-weight: 600;">- {{formatMoney valor}}</td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <a href="/fluxo-caixa/despesa/editar/{{id}}" class="btn btn-secondary btn-sm">Editar</a>
+                            <form action="/fluxo-caixa/despesa/excluir/{{id}}" method="POST" onsubmit="return confirm('Excluir esta despesa?');" style="margin: 0; display: inline-block;">
+                                <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="4" style="text-align: center;">Nenhuma despesa registrada neste período.</td></tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Inicialização e Controle de Filtros
+    document.addEventListener("DOMContentLoaded", () => {
+        const periodoAtual = "{{periodoSelecionado}}";
+        const mesAtual = "{{mesSelecionado}}";
+        const anoAtual = "{{anoSelecionado}}";
+
+        document.getElementById('selectPeriodo').value = periodoAtual;
+        document.getElementById('selectMes').value = mesAtual;
+        document.getElementById('inputAno').value = anoAtual;
+
+        atualizarVisibilidadeControles(periodoAtual);
+    });
+
+    function atualizarVisibilidadeControles(periodo) {
+        const controles = document.getElementById('controles-navegacao');
+        const selectMes = document.getElementById('selectMes');
+        
+        if (periodo === 'total') {
+            controles.style.display = 'none';
+        } else {
+            controles.style.display = 'flex';
+            selectMes.style.display = (periodo === 'mes' || periodo === 'trimestre') ? 'block' : 'none';
+        }
+    }
+
+    function mudarFiltro() {
+        const periodo = document.getElementById('selectPeriodo').value;
+        const mes = document.getElementById('selectMes').value;
+        const ano = document.getElementById('inputAno').value;
+        
+        atualizarVisibilidadeControles(periodo);
+        window.location.href = `/fluxo-caixa?periodo=${periodo}&mes=${mes}&ano=${ano}`;
+    }
+
+    function navegarPeriodo(direcao) {
+        const periodo = document.getElementById('selectPeriodo').value;
+        let mes = parseInt(document.getElementById('selectMes').value);
+        let ano = parseInt(document.getElementById('inputAno').value);
+
+        if (periodo === 'mes') {
+            mes += direcao;
+            if (mes > 11) { mes = 0; ano++; }
+            if (mes < 0) { mes = 11; ano--; }
+        } else if (periodo === 'trimestre') {
+            mes += (direcao * 3);
+            if (mes > 11) { mes = 0; ano++; }
+            if (mes < 0) { mes = 9; ano--; }
+        } else if (periodo === 'ano') {
+            ano += direcao;
+        }
+
+        window.location.href = `/fluxo-caixa?periodo=${periodo}&mes=${mes}&ano=${ano}`;
+    }
+
+    // 1. GERAÇÃO DO GRÁFICO
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const periodo = "{{periodoSelecionado}}";
+            const mes = "{{mesSelecionado}}";
+            const ano = "{{anoSelecionado}}";
+            
+            const resposta = await fetch(`/api/grafico-fluxo?periodo=${periodo}&mes=${mes}&ano=${ano}`);
+            const dados = await resposta.json();
+
+            const ctx = document.getElementById('graficoFluxoCaixa').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dados.labels,
+                    datasets: [{
+                        label: 'Valores Acumulados (R$)',
+                        data: dados.valores,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ],
+                        borderColor: ['#3b82f6', '#f59e0b', '#ef4444', '#10b981'],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return ' R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (erro) {
+            console.error("Erro ao carregar gráfico:", erro);
+        }
+    });
+
+    // 2. ATUALIZAÇÃO EM TEMPO REAL DA CALCULADORA
+    const inputsCalculadora = document.querySelectorAll('.calc-input');
+
+    function recalcularCustos() {
+        const mercadoria = parseFloat(document.getElementById('calcMercadoria').value) || 0;
+        const viagem = parseFloat(document.getElementById('calcViagem').value) || 0;
+        const hotel = parseFloat(document.getElementById('calcHotel').value) || 0;
+        const alimentacao = parseFloat(document.getElementById('calcAlimentacao').value) || 0;
+        const frete = parseFloat(document.getElementById('calcFrete').value) || 0;
+        const imposto = parseFloat(document.getElementById('calcImposto').value) || 0;
+        const qtdPecas = parseInt(document.getElementById('calcQtdPecas').value) || 1;
+
+        const custoTotal = mercadoria + viagem + hotel + alimentacao + frete + imposto;
+        const custoUnitario = qtdPecas > 0 ? custoTotal / qtdPecas : 0;
+
+        document.getElementById('resultadoTotal').innerText = 'R$ ' + custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('resultadoUnidade').innerText = 'R$ ' + custoUnitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
+    inputsCalculadora.forEach(input => { input.addEventListener('input', recalcularCustos); });
+
+    // 3. ENVIO MÚLTIPLO
+    document.getElementById('formRateioMercadoria').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const nomeLote = document.getElementById('nomeLote').value || "Lote";
+        const mercadoria = parseFloat(document.getElementById('calcMercadoria').value) || 0;
+        const viagem = parseFloat(document.getElementById('calcViagem').value) || 0;
+        const hotel = parseFloat(document.getElementById('calcHotel').value) || 0;
+        const alimentacao = parseFloat(document.getElementById('calcAlimentacao').value) || 0;
+        const frete = parseFloat(document.getElementById('calcFrete').value) || 0;
+        const imposto = parseFloat(document.getElementById('calcImposto').value) || 0;
+
+        const despesas = [];
+        if (mercadoria > 0) despesas.push({ categoria: "Mercadoria", descricao: `${nomeLote} - Valor Roupas`, valor: mercadoria });
+        if (viagem > 0) despesas.push({ categoria: "Transporte/Combustível", descricao: `${nomeLote} - Passagem/Viagem`, valor: viagem });
+        if (hotel > 0) despesas.push({ categoria: "Hospedagem", descricao: `${nomeLote} - Hotel`, valor: hotel });
+        if (alimentacao > 0) despesas.push({ categoria: "Alimentação", descricao: `${nomeLote} - Alimentação da Viagem`, valor: alimentacao });
+        if (frete > 0) despesas.push({ categoria: "Frete", descricao: `${nomeLote} - Transportadora/Frete`, valor: frete });
+        if (imposto > 0) despesas.push({ categoria: "Impostos", descricao: `${nomeLote} - Impostos`, valor: imposto });
+
+        if (despesas.length === 0) {
+            alert("Preencha pelo menos um valor na calculadora!");
+            return;
+        }
+
+        try {
+            for (let item of despesas) {
+                await fetch('/fluxo-caixa/despesa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+            }
+            window.location.reload();
+        } catch (erro) {
+            console.error("Erro ao registrar despesas:", erro);
+            alert("Erro ao registrar algumas despesas.");
+        }
+    });
+</script>

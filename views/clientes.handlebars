@@ -1,0 +1,177 @@
+<div class="page-head">
+
+    <span class="eyebrow">Relacionamento</span>
+
+    <h2>Clientes</h2>
+
+    <p>Cadastro de clientes e controle de compras fiado (a prazo).</p>
+
+</div>
+
+
+
+{{#if sucesso}}
+
+    <p class="alert alert-sucesso">{{sucesso}}</p>
+
+{{/if}}
+
+{{#if erro}}
+
+    <p class="alert alert-erro">{{erro}}</p>
+
+{{/if}}
+
+
+
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
+
+    <form method="GET" action="/clientes" style="display: flex; gap: 8px;">
+
+        <input type="text" name="busca" value="{{busca}}" placeholder="Buscar por nome..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink);">
+
+        <button type="submit" class="btn btn-secondary btn-sm">Buscar</button>
+
+    </form>
+
+    <a href="/clientes/cadastrar" class="btn btn-primary">+ Novo Cliente</a>
+
+</div>
+
+
+
+{{#if clientes.length}}
+
+    <div class="table-wrap">
+
+    <table class="tabela-dados">
+
+        <thead>
+
+            <tr>
+
+                <th>Nome</th>
+
+                <th>Telefone</th>
+
+                <th>CPF</th>
+
+                <th>Limite de Crédito</th>
+
+                <th>Saldo Devedor</th>
+
+                <th style="text-align: center;">Ações</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {{#each clientes}}
+
+            <tr>
+
+                <td>{{nome}}</td>
+
+                <td>{{#if telefone}}{{telefone}}{{else}}—{{/if}}</td>
+
+                <td>{{#if cpf}}{{cpf}}{{else}}—{{/if}}</td>
+
+                <td>{{formatMoney limite_credito}}</td>
+
+                <td style="{{#if saldo_devedor}}color: var(--rust); font-weight: 600;{{/if}}">{{formatMoney saldo_devedor}}</td>
+
+                <td style="text-align: center; white-space: nowrap;">
+
+                    <a href="/clientes/editar/{{id}}" class="btn btn-secondary btn-sm">Editar</a>
+
+                    {{#if saldo_devedor}}
+
+                        <button type="button" class="btn btn-primary btn-sm" onclick="abrirPagamento('{{id}}', '{{nome}}', '{{saldo_devedor}}')">Receber</button>
+
+                    {{/if}}
+
+                    <form action="/clientes/excluir/{{id}}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir o cliente {{nome}}?');" style="margin: 0; display: inline-block;">
+
+                        <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+
+                    </form>
+
+                </td>
+
+            </tr>
+
+            {{/each}}
+
+        </tbody>
+
+    </table>
+
+    </div>
+
+{{else}}
+
+    <p>Nenhum cliente cadastrado ainda.</p>
+
+{{/if}}
+
+
+
+<!-- Formulário simples de baixa de pagamento fiado -->
+
+<div id="painel-pagamento" class="section-box" style="display: none; margin-top: 20px;">
+
+    <h3 id="titulo-pagamento" style="margin-top: 0;">Registrar Pagamento</h3>
+
+    <form id="form-pagamento" method="POST" class="form-despesa">
+
+        <div class="form-group">
+
+            <label>Valor pago (R$)</label>
+
+            <input type="number" step="0.01" min="0.01" name="valor_pago" required>
+
+        </div>
+
+        <div class="form-group" style="flex: 0.5; min-width: 140px;">
+
+            <button type="submit" class="btn btn-primary" style="height: 42px; width: 100%;">Confirmar</button>
+
+        </div>
+
+        <div class="form-group" style="flex: 0.5; min-width: 140px;">
+
+            <button type="button" class="btn btn-secondary" style="height: 42px; width: 100%;" onclick="fecharPagamento()">Cancelar</button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+
+<script>
+
+    function abrirPagamento(id, nome, saldo) {
+
+        const painel = document.getElementById('painel-pagamento');
+
+        document.getElementById('titulo-pagamento').textContent = `Registrar Pagamento — ${nome} (deve ${Number(saldo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+
+        document.getElementById('form-pagamento').action = `/clientes/${id}/pagamento`;
+
+        painel.style.display = 'block';
+
+        painel.scrollIntoView({ behavior: 'smooth' });
+
+    }
+
+    function fecharPagamento() {
+
+        document.getElementById('painel-pagamento').style.display = 'none';
+
+    }
+
+</script>

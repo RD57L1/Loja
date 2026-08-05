@@ -1,0 +1,71 @@
+<div class="page-head">
+    <span class="eyebrow">Estoque</span>
+    <h2>Gerenciamento de Estoque</h2>
+    <p>Visão geral de todas as peças cadastradas.</p>
+</div>
+
+{{#if sucesso}}
+    <p class="alert alert-sucesso">{{sucesso}}</p>
+{{/if}}
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<div class="resumo-box">
+    <span><span class="stat-label">Total</span><span class="stat-value">{{produtos.length}} produto(s)</span></span>
+    <span><span class="stat-label">Disponíveis</span><span class="stat-value">{{disponiveis}}</span></span>
+    <span><span class="stat-label">Vendidos</span><span class="stat-value">{{vendidos}}</span></span>
+</div>
+
+<form method="GET" action="/estoque" style="margin-bottom: 18px;">
+    <label for="ordenar" style="font-size: 12.5px; font-weight: 600; color: var(--ink-soft);">Ordenar por</label>
+    <select id="ordenar" name="ordenar" onchange="this.form.submit()" class="select-ordenar" style="margin-left: 10px;">
+        <option value="codigo" {{#if (eq ordenarAtual 'codigo')}}selected{{/if}}>Código (ordem de cadastro)</option>
+        <option value="aquisicao_asc" {{#if (eq ordenarAtual 'aquisicao_asc')}}selected{{/if}}>Aquisição: mais antigo → mais novo</option>
+        <option value="aquisicao_desc" {{#if (eq ordenarAtual 'aquisicao_desc')}}selected{{/if}}>Aquisição: mais novo → mais antigo</option>
+    </select>
+</form>
+
+{{#if produtos.length}}
+    <div class="table-wrap">
+    <table class="tabela-dados">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Cor</th>
+                <th>Qtd.</th>
+                <th>Custo</th>
+                <th>Valor</th>
+                <th>Aquisição</th>
+                <th>Status</th>
+                <th style="text-align: center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each produtos}}
+            <tr>
+                <td>{{codigo}}</td>
+                <td>{{descricao}}</td>
+                <td>{{tipo}}</td>
+                <td>{{#if cor}}{{cor}}{{else}}—{{/if}}</td>
+                <td>{{quantidade}}</td>
+                <td>{{formatMoney custo}}</td>
+                <td>{{formatMoney valor}}</td>
+                <td>{{formatDate data_aquisicao}}</td>
+                <td><span class="status-badge status-{{status}}">{{status}}</span></td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="/estoque/editar/{{codigo}}" class="btn btn-secondary btn-sm">Editar</a>
+                    <form action="/estoque/excluir/{{codigo}}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir o produto {{codigo}}?');" style="margin: 0; display: inline-block;">
+                        <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    </div>
+{{else}}
+    <p>Nenhum produto cadastrado ainda.</p>
+{{/if}}

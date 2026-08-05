@@ -1,0 +1,55 @@
+<div class="page-head">
+    <span class="eyebrow">Estoque</span>
+    <h2>Editar Produto</h2>
+    <p>Atualize os dados da peça <strong>{{produto.codigo}}</strong>.</p>
+</div>
+
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<form action="/estoque/editar/{{produto.codigo}}" method="POST" class="form-cadastro card-form">
+    <div class="form-group">
+        <label>Código do produto</label>
+        <p class="codigo-auto">{{produto.codigo}} <em>(não pode ser alterado)</em></p>
+    </div>
+    <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" name="descricao" value="{{produto.descricao}}" required>
+    </div>
+    <div class="form-group">
+        <label for="tipo">Tipo</label>
+        <input type="text" id="tipo" name="tipo" value="{{produto.tipo}}" required>
+    </div>
+    <div class="form-group">
+        <label for="custo">Custo (R$)</label>
+        <input type="number" step="0.01" id="custo" name="custo" value="{{produto.custo}}" required>
+    </div>
+    <div class="form-group">
+        <label for="valor">Valor de venda (R$)</label>
+        <input type="number" step="0.01" id="valor" name="valor" value="{{produto.valor}}" required>
+    </div>
+    <div class="form-group">
+        <label for="cor">Cor</label>
+        <input type="text" id="cor" name="cor" value="{{produto.cor}}" placeholder="Ex: Preto, Off White...">
+    </div>
+    <div class="form-group">
+        <label for="quantidade">Quantidade em estoque</label>
+        <input type="number" min="0" step="1" id="quantidade" name="quantidade" value="{{produto.quantidade}}" required>
+    </div>
+    <div class="form-group">
+        <label for="data_aquisicao">Data de aquisição</label>
+        <input type="date" id="data_aquisicao" name="data_aquisicao" value="{{produto.data_aquisicao}}" required>
+    </div>
+    <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+            <option value="disponivel" {{#if (eq produto.status 'disponivel')}}selected{{/if}}>Disponível</option>
+            <option value="vendido" {{#if (eq produto.status 'vendido')}}selected{{/if}}>Vendido</option>
+        </select>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <a href="/estoque" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>

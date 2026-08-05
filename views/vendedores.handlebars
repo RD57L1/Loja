@@ -1,0 +1,48 @@
+<div class="page-head">
+    <span class="eyebrow">Equipe</span>
+    <h2>Vendedores e Gerentes</h2>
+    <p>Gerencie o acesso da equipe ao sistema.</p>
+</div>
+
+{{#if sucesso}}
+    <p class="alert alert-sucesso">{{sucesso}}</p>
+{{/if}}
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<div style="margin-bottom: 18px;">
+    <a href="/cadastrar-vendedor" class="btn btn-primary">+ Novo Vendedor</a>
+</div>
+
+{{#if usuarios.length}}
+    <div class="table-wrap">
+    <table class="tabela-dados">
+        <thead>
+            <tr>
+                <th>Código de Login</th>
+                <th>Cargo</th>
+                <th style="text-align: center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each usuarios}}
+            <tr>
+                <td>{{codigo_login}}</td>
+                <td>{{cargo}}</td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="/vendedores/editar/{{codigo_login}}" class="btn btn-secondary btn-sm">Editar</a>
+                    {{#unless (eq codigo_login ../codigoLogado)}}
+                        <form action="/vendedores/excluir/{{codigo_login}}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este vendedor?');" style="margin: 0; display: inline-block;">
+                            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                        </form>
+                    {{/unless}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    </div>
+{{else}}
+    <p>Nenhum vendedor cadastrado ainda.</p>
+{{/if}}

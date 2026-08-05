@@ -1,0 +1,20 @@
+<div class="page-head">
+    <span class="eyebrow">Pós-venda</span>
+    <h2>Registro de Devolução ou Troca</h2>
+    <p>Insira o código da peça para devolvê-la à disponibilidade no estoque.</p>
+</div>
+
+{{#if sucesso}}
+    <p class="alert alert-sucesso">{{sucesso}}</p>
+{{/if}}
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<form action="/devolucao" method="POST" class="form-cadastro card-form">
+    <div class="form-group">
+        <label for="codigo">Código do produto (5 dígitos)</label>
+        <input type="text" id="codigo" name="codigo" maxlength="5" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Confirmar Devolução</button>
+</form>

@@ -1,0 +1,529 @@
+<div class="pdv-layout">
+
+    <!-- Coluna Esquerda: Carrinho e Finalização -->
+    <div class="pdv-col-principal">
+        <div class="page-head">
+            <span class="eyebrow">Operação</span>
+            <h2>Frente de Caixa</h2>
+            <p>Adicione produtos, aplique descontos e finalize a venda.</p>
+        </div>
+
+        {{#if sucesso}}
+            <p class="alert alert-sucesso">{{sucesso}}</p>
+        {{/if}}
+        {{#if erro}}
+            <p class="alert alert-erro">{{erro}}</p>
+        {{/if}}
+
+        <!-- Campo de Inserção Rápida -->
+        <div class="quick-add">
+            <label for="codigo_rapido">Adicionar por código</label>
+            <div class="quick-add-row">
+                <input type="text" id="codigo_rapido" maxlength="5" placeholder="Digite os 5 dígitos...">
+                <button type="button" id="btn_add_carrinho" class="btn btn-primary">+ Adicionar</button>
+            </div>
+            <small id="info-produto"></small>
+        </div>
+
+        <!-- Formulário Principal -->
+        <form action="/frente-caixa" method="POST" id="form-venda">
+            <input type="hidden" name="carrinho" id="carrinho_input">
+            <input type="hidden" name="desconto_geral" id="desconto_geral_input" value="0">
+            <input type="hidden" name="codigo_cliente" id="codigo_cliente_input">
+
+            <!-- Tabela do Carrinho -->
+            <div class="table-wrap" style="margin-bottom: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th style="text-align: right;">Preço (R$)</th>
+                            <th style="text-align: center;">Qtd</th>
+                            <th style="text-align: center;">Desc. Item (%)</th>
+                            <th style="text-align: right;">Subtotal (R$)</th>
+                            <th style="text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-carrinho">
+                        <tr id="linha-vazia"><td colspan="6" style="padding: 20px; text-align: center; color: var(--ink-faint);">O carrinho está vazio.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Resumo e Pagamento -->
+            <div class="summary-panel">
+                <div class="summary-row">
+                    <label for="desconto_geral">Desconto geral na compra (%)</label>
+                    <input type="number" id="desconto_geral" name="desconto_geral_display" value="0" min="0" max="100" step="0.01" onfocus="this.select(); if(this.value=='0' || this.value=='0.00') this.value='';">
+                </div>
+
+                <div class="summary-row summary-total">
+                    <strong>Total a pagar</strong>
+                    <strong>R$ <span id="valor_total_tela">0.00</span></strong>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="meio_pagamento">Meio de pagamento</label>
+                    <select id="meio_pagamento" name="meio_pagamento" required>
+                        <option value="">Selecione...</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Cartão Débito">Cartão Débito</option>
+                        <option value="Cartão Crédito">Cartão Crédito</option>
+                        <option value="PIX">PIX</option>
+                        <option value="Fiado">Fiado (a prazo)</option>
+                    </select>
+                </div>
+
+                <!-- Painel Oculto: Opções de Fiado, CPF e Parcelas -->
+                <div id="painel-cliente-fiado" style="display: none; background: var(--surface-hover); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label for="busca_cliente">CPF do Cliente (obrigatório para fiado)</label>
+                        <input type="text" id="busca_cliente" placeholder="000.000.000-00" maxlength="14">
+                        <small id="info-cliente" style="display: block; margin-top: 6px;"></small>
+                        <div id="resultados_cliente" class="pdv-list-wrap" style="display: none; max-height: 160px; margin-top: 8px;"></div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0; margin-top: 10px;">
+                        <label for="numero_parcelas">Número de Parcelas</label>
+                        <select id="numero_parcelas" name="numero_parcelas">
+                            <option value="1">1x (Vencimento para 30 dias)</option>
+                            <option value="2">2x parcelas</option>
+                            <option value="3">3x parcelas</option>
+                            <option value="4">4x parcelas</option>
+                            <option value="5">5x parcelas</option>
+                            <option value="6">6x parcelas</option>
+                            <option value="12">12x parcelas</option>
+                        </select>
+                        <small id="info_valor_parcela" style="display: block; margin-top: 8px; font-size: 14px; font-weight: bold; color: var(--ink);"></small>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn_finalizar" class="btn btn-primary btn-block" disabled style="margin-top: 20px;">Finalizar Venda</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Coluna Direita: Lista de Produtos Disponíveis -->
+    <div class="pdv-col-lateral">
+        <h3>Produtos Disponíveis</h3>
+        <p style="font-size: 13px;">Busque por tipo ou clique em "Add" para inserir no carrinho.</p>
+
+        <div class="pdv-search">
+            <input type="text" id="filtro_tipo" placeholder="Filtrar por tipo ou nome...">
+            <button type="button" id="btn_buscar" class="btn btn-secondary">Buscar</button>
+        </div>
+
+        <div class="pdv-list-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cód</th>
+                        <th>Desc/Tipo</th>
+                        <th style="text-align: center;">Tam</th>
+                        <th style="text-align: center;">Estoque</th>
+                        <th>Valor</th>
+                        <th style="text-align: center;">Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-produtos-disponiveis">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT DO CARRINHO DE COMPRAS -->
+<script>
+let carrinho = [];
+let clienteSelecionado = null;
+
+// ==========================================
+// 1. LÓGICA DO CARRINHO E CÁLCULOS
+// ==========================================
+function atualizarCarrinho() {
+    const tbody = document.getElementById('tabela-carrinho');
+    const descontoGeralInput = document.getElementById('desconto_geral');
+    const descontoGeral = parseFloat(descontoGeralInput.value) || 0;
+    const btnFinalizar = document.getElementById('btn_finalizar');
+    const inputOculto = document.getElementById('carrinho_input');
+    const inputDescontoOculto = document.getElementById('desconto_geral_input');
+    const spanTotal = document.getElementById('valor_total_tela');
+
+    tbody.innerHTML = '';
+    let somaValoresGuardados = 0;
+
+    if (carrinho.length === 0) {
+        tbody.innerHTML = '<tr id="linha-vazia"><td colspan="6" style="padding: 20px; text-align: center; color: var(--ink-faint);">O carrinho está vazio.</td></tr>';
+        btnFinalizar.disabled = true;
+        spanTotal.textContent = '0.00';
+        inputOculto.value = '';
+        inputDescontoOculto.value = '0';
+        atualizarValorParcela();
+        return;
+    }
+
+    carrinho.forEach((item, index) => {
+        const limiteEstoque = item.estoqueMaximo !== undefined ? item.estoqueMaximo : 9999;
+
+        if (item.quantidade > limiteEstoque) {
+            item.quantidade = limiteEstoque;
+        }
+
+        const subtotalBase = item.preco * item.quantidade;
+        const valorComDescontoItem = subtotalBase - (subtotalBase * (item.descontoItem / 100));
+        
+        item.valorGuardadoItem = valorComDescontoItem;
+        somaValoresGuardados += valorComDescontoItem;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <strong>${item.codigo}</strong><br>
+                <small style="color: var(--ink-soft);">${item.descricao}</small>
+            </td>
+            <td style="text-align: right;">R$ ${item.preco.toFixed(2)}</td>
+            <td style="text-align: center;">
+                <input type="number" min="1" max="${limiteEstoque}" value="${item.quantidade}" 
+                    onfocus="this.select()"
+                    onchange="alterarQuantidadeItem(${index}, this.value)"
+                    style="width: 50px; padding: 4px; text-align: center; border: 1px solid var(--border-strong); border-radius: 4px;">
+            </td>
+            <td style="text-align: center;">
+                <input type="number" min="0" max="100" step="0.01" value="${item.descontoItem}"
+                    onfocus="this.select(); if(this.value=='0') this.value='';"
+                    onblur="if(this.value=='') { this.value='0'; alterarDescontoItem(${index}, 0); }"
+                    onchange="alterarDescontoItem(${index}, this.value)"
+                    style="width: 70px; padding: 6px; text-align: center; border: 1px solid var(--border-strong); border-radius: 4px;">
+            </td>
+            <td style="text-align: right; font-weight: 600;">R$ ${valorComDescontoItem.toFixed(2)}</td>
+            <td style="text-align: center;">
+                <button type="button" onclick="removerDoCarrinho(${index})" class="btn btn-danger btn-sm">X</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const totalFinal = somaValoresGuardados - (somaValoresGuardados * (descontoGeral / 100));
+
+    const fatorProporcional = somaValoresGuardados > 0 ? (totalFinal / somaValoresGuardados) : 1;
+    carrinho.forEach(item => {
+        item.valorFinal = item.valorGuardadoItem * fatorProporcional;
+    });
+
+    spanTotal.textContent = totalFinal > 0 ? totalFinal.toFixed(2) : '0.00';
+    
+    inputOculto.value = JSON.stringify(carrinho);
+    inputDescontoOculto.value = descontoGeral;
+
+    validarBotaoFinalizar();
+    atualizarValorParcela();
+}
+
+function validarBotaoFinalizar() {
+    const btnFinalizar = document.getElementById('btn_finalizar');
+    const meioPagamento = document.getElementById('meio_pagamento').value;
+    const totalAtual = parseFloat(document.getElementById('valor_total_tela').textContent) || 0;
+
+    if (carrinho.length === 0) {
+        btnFinalizar.disabled = true;
+        return;
+    }
+
+    if (meioPagamento === 'Fiado') {
+        const infoCliente = document.getElementById('info-cliente');
+        if (!clienteSelecionado) {
+            btnFinalizar.disabled = true;
+            return;
+        }
+        if (totalAtual > clienteSelecionado.disponivel) {
+            btnFinalizar.disabled = true;
+            infoCliente.style.color = 'var(--rust)';
+            infoCliente.textContent = `Limite insuficiente. Disponível: R$ ${clienteSelecionado.disponivel.toFixed(2)}`;
+            return;
+        }
+    }
+
+    btnFinalizar.disabled = false;
+}
+
+async function adicionarAoCarrinho(codigo) {
+    const infoProduto = document.getElementById('info-produto');
+    const inputRapido = document.getElementById('codigo_rapido');
+
+    try {
+        const resposta = await fetch(`/api/produto/${codigo}`);
+        const dados = await resposta.json();
+
+        if (resposta.ok && dados.status === 'disponivel') {
+            const estoqueDisponivel = Number(dados.quantidade) || 0;
+
+            if (estoqueDisponivel <= 0) {
+                infoProduto.style.color = 'var(--rust)';
+                infoProduto.textContent = 'Produto esgotado no estoque!';
+                return;
+            }
+
+            const indexExistente = carrinho.findIndex(item => item.codigo === codigo);
+            
+            if (indexExistente !== -1) {
+                carrinho[indexExistente].estoqueMaximo = estoqueDisponivel;
+
+                if (carrinho[indexExistente].quantidade + 1 > estoqueDisponivel) {
+                    infoProduto.style.color = 'var(--rust)';
+                    infoProduto.textContent = `Estoque máximo atingido! Apenas ${estoqueDisponivel} peça(s) disponível(is).`;
+                    return;
+                }
+                carrinho[indexExistente].quantidade += 1;
+                infoProduto.style.color = 'var(--sage)';
+                infoProduto.textContent = 'Quantidade +1 adicionada!';
+            } else {
+                carrinho.push({
+                    codigo: dados.codigo,
+                    descricao: dados.descricao,
+                    preco: Number(dados.valor),
+                    quantidade: 1,
+                    estoqueMaximo: estoqueDisponivel,
+                    descontoItem: 0,
+                    valorFinal: Number(dados.valor)
+                });
+                infoProduto.style.color = 'var(--sage)';
+                infoProduto.textContent = 'Produto adicionado!';
+            }
+
+            inputRapido.value = ''; 
+            atualizarCarrinho();
+        } else {
+            infoProduto.style.color = 'var(--rust)';
+            infoProduto.textContent = dados.erro || `Produto Indisponível (${dados.status}).`;
+        }
+    } catch (erro) {
+        infoProduto.style.color = 'var(--rust)';
+        infoProduto.textContent = 'Erro ao buscar o produto.';
+    }
+}
+
+function alterarQuantidadeItem(index, novaQtd) {
+    let qtd = parseInt(novaQtd);
+    if (isNaN(qtd) || qtd < 1) qtd = 1;
+
+    const limiteEstoque = carrinho[index].estoqueMaximo !== undefined ? carrinho[index].estoqueMaximo : 9999;
+
+    if (qtd > limiteEstoque) {
+        alert(`Quantidade indisponível! Estoque máximo permitido: ${limiteEstoque}`);
+        qtd = limiteEstoque;
+    }
+
+    carrinho[index].quantidade = qtd;
+    atualizarCarrinho();
+}
+
+function removerDoCarrinho(index) {
+    carrinho.splice(index, 1);
+    atualizarCarrinho();
+}
+
+function alterarDescontoItem(index, novoDesconto) {
+    let desc = parseFloat(novoDesconto);
+    if (isNaN(desc) || desc < 0) desc = 0;
+    if (desc > 100) desc = 100;
+
+    carrinho[index].descontoItem = desc;
+    atualizarCarrinho();
+}
+
+// ==========================================
+// 2. LÓGICA DE CÁLCULO DE PARCELAS
+// ==========================================
+function atualizarValorParcela() {
+    const selectParcelas = document.getElementById('numero_parcelas');
+    const infoValorParcela = document.getElementById('info_valor_parcela');
+    const totalAtual = parseFloat(document.getElementById('valor_total_tela').textContent) || 0;
+    
+    const numParcelas = parseInt(selectParcelas.value) || 1;
+    
+    if (totalAtual > 0) {
+        const valorParcela = totalAtual / numParcelas;
+        infoValorParcela.textContent = `Valor de cada parcela: R$ ${valorParcela.toFixed(2)}`;
+    } else {
+        infoValorParcela.textContent = '';
+    }
+}
+
+document.getElementById('numero_parcelas').addEventListener('change', atualizarValorParcela);
+
+// Eventos de Inserção Rápidas
+document.getElementById('btn_add_carrinho').addEventListener('click', () => {
+    const cod = document.getElementById('codigo_rapido').value.trim();
+    if (cod.length === 5) adicionarAoCarrinho(cod);
+});
+
+document.getElementById('codigo_rapido').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const cod = e.target.value.trim();
+        if (cod.length === 5) adicionarAoCarrinho(cod);
+    }
+});
+
+const inputDescontoGeral = document.getElementById('desconto_geral');
+inputDescontoGeral.addEventListener('focus', function() {
+    this.select();
+    if (this.value === '0' || this.value === '0.00') {
+        this.value = '';
+    }
+});
+inputDescontoGeral.addEventListener('blur', function() {
+    if (this.value === '') {
+        this.value = '0';
+        atualizarCarrinho();
+    }
+});
+inputDescontoGeral.addEventListener('input', atualizarCarrinho);
+
+// ==========================================
+// 3. LÓGICA DA LISTA LATERAL DE PRODUTOS
+// ==========================================
+async function carregarProdutosDisponiveis(tipoFiltro = '') {
+    const tbody = document.getElementById('lista-produtos-disponiveis');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 10px;">Carregando...</td></tr>';
+
+    try {
+        const tempo = new Date().getTime();
+        let url = `/api/produtos-disponiveis?_t=${tempo}`;
+        if (tipoFiltro) url += `&tipo=${encodeURIComponent(tipoFiltro)}`;
+
+        const resposta = await fetch(url);
+        const produtos = await resposta.json();
+
+        tbody.innerHTML = '';
+        if (produtos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 10px;">Nenhum produto.</td></tr>';
+            return;
+        }
+
+        produtos.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${p.codigo}</strong></td>
+                <td style="font-size: 12px;">${p.descricao}<br><em style="color: var(--ink-faint);">${p.tipo}</em></td>
+                <td style="text-align: center; font-weight: 500;">${p.tamanho || '-'}</td>
+                <td style="text-align: center; font-weight: bold; color: ${p.quantidade <= 2 ? 'var(--rust)' : 'var(--ink)'};">
+                    ${p.quantidade || 0}
+                </td>
+                <td>R$ ${Number(p.valor).toFixed(2)}</td>
+                <td style="text-align: center;">
+                    <button type="button" onclick="adicionarAoCarrinho('${p.codigo}')" class="btn btn-secondary btn-sm">+ Add</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (erro) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--rust);">Erro ao carregar.</td></tr>';
+    }
+}
+
+document.getElementById('btn_buscar').addEventListener('click', () => {
+    carregarProdutosDisponiveis(document.getElementById('filtro_tipo').value);
+});
+document.getElementById('filtro_tipo').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        carregarProdutosDisponiveis(e.target.value);
+    }
+});
+
+// ==========================================
+// 4. LÓGICA DE SELEÇÃO DE CLIENTE POR CPF COM MÁSCARA AUTOMÁTICA E FILTRO RIGOROSO
+// ==========================================
+document.getElementById('meio_pagamento').addEventListener('change', function() {
+    const painel = document.getElementById('painel-cliente-fiado');
+    if (this.value === 'Fiado') {
+        painel.style.display = 'block';
+    } else {
+        painel.style.display = 'none';
+        clienteSelecionado = null;
+        document.getElementById('codigo_cliente_input').value = '';
+        document.getElementById('busca_cliente').value = '';
+        document.getElementById('info-cliente').textContent = '';
+        document.getElementById('resultados_cliente').style.display = 'none';
+    }
+    validarBotaoFinalizar();
+});
+
+let timeoutBuscaCliente = null;
+document.getElementById('busca_cliente').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+
+    if (value.length > 9) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, '$1.$2.$3');
+    } else if (value.length > 3) {
+        value = value.replace(/^(\d{3})(\d{1,3}).*/, '$1.$2');
+    }
+    e.target.value = value;
+
+    const termo = e.target.value.trim();
+    const digitos = value.replace(/\D/g, '');
+    clearTimeout(timeoutBuscaCliente);
+
+    if (digitos.length < 4) {
+        document.getElementById('resultados_cliente').style.display = 'none';
+        return;
+    }
+
+    timeoutBuscaCliente = setTimeout(async () => {
+        try {
+            const resposta = await fetch(`/api/clientes?q=${encodeURIComponent(termo)}`);
+            let clientes = await resposta.json();
+            const box = document.getElementById('resultados_cliente');
+
+            clientes = clientes.filter(c => {
+                if (!c.cpf) return false;
+                const cpfDigitos = c.cpf.replace(/\D/g, '');
+                return cpfDigitos.includes(digitos);
+            });
+
+            box.innerHTML = '';
+            if (clientes.length === 0) {
+                box.innerHTML = '<p style="padding: 8px; font-size: 13px;">Nenhum cliente encontrado.</p>';
+            } else {
+                clientes.forEach(c => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'padding: 8px; cursor: pointer; border-bottom: 1px solid var(--border);';
+                    item.innerHTML = `<strong>${c.nome}</strong> - <small>CPF: ${c.cpf || 'N/A'}</small><br><small>Disponível: R$ ${c.disponivel.toFixed(2)}</small>`;
+                    item.addEventListener('click', () => selecionarCliente(c));
+                    box.appendChild(item);
+                });
+            }
+            box.style.display = 'block';
+        } catch (erro) {
+            console.error('Erro ao buscar clientes:', erro);
+        }
+    }, 300);
+});
+
+function selecionarCliente(cliente) {
+    clienteSelecionado = cliente;
+    document.getElementById('codigo_cliente_input').value = cliente.id;
+    document.getElementById('busca_cliente').value = cliente.cpf ? `${cliente.nome} (${cliente.cpf})` : cliente.nome;
+    document.getElementById('resultados_cliente').style.display = 'none';
+
+    const infoCliente = document.getElementById('info-cliente');
+    infoCliente.style.color = 'var(--sage)';
+    infoCliente.textContent = `Cliente selecionado: ${cliente.nome}. Limite disponível: R$ ${cliente.disponivel.toFixed(2)}`;
+
+    validarBotaoFinalizar();
+}
+
+document.getElementById('form-venda').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+        e.preventDefault();
+    }
+});
+
+// Inicialização
+carregarProdutosDisponiveis();
+</script>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ateliê · Sistema de Gestão</title>
+    <script>
+        (function () {
+            var salvo = localStorage.getItem('ateliê-tema');
+            var tema = salvo || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', tema);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    {{{body}}}
+</body>
+
+<script>
+    // Lê a barra de endereços do navegador
+    const urlParams = new URLSearchParams(window.location.search);
+    const mensagemErro = urlParams.get('erro');
+    const mensagemSucesso = urlParams.get('sucesso');
+
+    // Se o backend mandou um erro na URL, exibe instantaneamente
+    if (mensagemErro) {
+        alert("⚠️ Atenção: " + mensagemErro);
+
+        // Limpa a URL para o erro não aparecer de novo caso você apenas atualize a página (F5)
+        window.history.replaceState(null, null, window.location.pathname);
+    }
+
+    // Já deixamos preparado para mensagens de sucesso também!
+    if (mensagemSucesso) {
+        alert("✅ Sucesso: " + mensagemSucesso);
+        window.history.replaceState(null, null, window.location.pathname);
+    }
+</script>
+
+</html>

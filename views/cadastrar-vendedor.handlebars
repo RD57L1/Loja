@@ -1,0 +1,28 @@
+<div class="page-head">
+    <span class="eyebrow">Equipe</span>
+    <h2>Cadastrar Novo Vendedor</h2>
+    <p>Crie o acesso de um membro da equipe ao sistema.</p>
+</div>
+
+{{#if erro}}
+    <p class="alert alert-erro">{{erro}}</p>
+{{/if}}
+
+<form action="/cadastrar-vendedor" method="POST" class="form-cadastro card-form">
+    <div class="form-group">
+        <label for="codigo_login">Código de login</label>
+        <input type="number" id="codigo_login" name="codigo_login" required>
+    </div>
+    <div class="form-group">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" required>
+    </div>
+    <div class="form-group">
+        <label for="cargo">Cargo</label>
+        <select id="cargo" name="cargo" required>
+            <option value="Vendedor">Vendedor</option>
+            <option value="Gerente">Gerente</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Cadastrar Vendedor</button>
+</form>
